@@ -1,1 +1,292 @@
+// v2/script.js
+
+const tooltip = document.getElementById("tooltip");
+const contours = document.querySelectorAll(".contour");
+
+// Panel elements
+const panel = document.getElementById("info-panel");
+const panelTitle = document.getElementById("panel-title");
+const panelMeta = document.getElementById("panel-meta");
+const panelBody = document.getElementById("panel-body");
+const panelClose = document.getElementById("panel-close");
+const panelOverlay = document.getElementById("panel-overlay");
+
+// Footer controls (optional, but supported by the CSS + markup I gave you)
+const prevBtn = document.getElementById("prev-fragment");
+const nextBtn = document.getElementById("next-fragment");
+const layerLink = document.getElementById("layer-link");
+
+// Layer names + essay links
+const LAYERS = {
+  0: { name: "Orientation", href: "layer-0.html" },
+  1: { name: "Instrument", href: "layer-1.html" },
+  2: { name: "Extraction / Governance", href: "layer-2.html" },
+  3: { name: "Ruin / Afterlives", href: "layer-3.html" },
+};
+
+// Your content lives here.
+// Add entries gradually; anything missing falls back to a friendly placeholder.
+//
+// layer: 0–3
+// order: number (used for Prev/Next within layer)
+const CONTOUR_CONTENT = {
+  "contour-1": {
+    title: "Orientation · First ring",
+    meta: "Layer 0 · how to read",
+    layer: 0,
+    order: 1,
+    body: `
+      <section class="entry">
+        <div class="entry-block">
+          <div class="entry-label">Reading instructions</div>
+          <p>
+            Click a ring. The panel is a reader. Each fragment is a relay:
+            measurement → monument → weather → archive.
+          </p>
+        </div>
+        <div class="entry-block">
+          <div class="entry-label">What the rings do</div>
+          <p>
+            These lines aren’t just elevation. They’re a collapse of time and space—
+            a way to feel how distance becomes political, material, and uneven.
+          </p>
+        </div>
+        <div class="entry-actions">
+          <a class="panel-link" href="essay.html">Open the layered essay →</a>
+        </div>
+      </section>
+    `,
+  },
+
+  // Example: Mt. Shasta signal fragment (edit id to match a real ring you want)
+  "contour-42": {
+    title: "Elevation band · Relay Node",
+    meta: "Layer 1 · Instrument · 1875 / 1954 / present drift",
+    layer: 1,
+    order: 1,
+    body: `
+      <section class="entry">
+
+        <div class="entry-block">
+          <div class="entry-label">Coordinate</div>
+          <p>
+            In 1875, at immense labor and expense, a 3,500-pound reflective cone and base
+            were hauled to the summit of Mount Shasta’s north peak and installed as a
+            transcontinental geodetic relay point—built to collapse 192 miles into measurable relation.
+          </p>
+        </div>
+
+        <div class="entry-block">
+          <div class="entry-label">Operation</div>
+          <p>
+            The signal translated light into line, summit into coordinate, geology into geometry.
+            For a moment, elevation functioned as relay.
+          </p>
+        </div>
+
+        <div class="entry-block">
+          <div class="entry-label">Failure Mode</div>
+          <p>
+            Snow accumulated. Ice encased the base. The relay became weather, rumor, artifact.
+            What had been a monument to measurement slipped into obscurity—visible only when thaw revealed it.
+          </p>
+        </div>
+
+        <div class="entry-block">
+          <div class="entry-label">Temporal Distortion</div>
+          <p>
+            The contour is not elevation alone. It is a fold in time: ambition, neglect, and recovery
+            layered onto the same coordinate. Measurement sought permanence. Instead, it produced afterlife.
+          </p>
+        </div>
+
+        <div class="entry-actions">
+          <a class="panel-link" href="layer-1.html">Read Layer 1 essay →</a>
+        </div>
+
+      </section>
+    `,
+  },
+
+  "contour-57": {
+    title: "Compression band · Survey feeling",
+    meta: "Layer 1 · Instrument · felt distance",
+    layer: 1,
+    order: 2,
+    body: `
+      <section class="entry">
+        <div class="entry-block">
+          <div class="entry-label">Instrument reading</div>
+          <p>
+            Precision does not erase affect. It reorganizes it—into thresholds, margins, and zones of attention.
+          </p>
+        </div>
+        <div class="entry-block">
+          <div class="entry-label">Question</div>
+          <p>
+            When the map claims neutrality, whose labor and risk does it hide?
+          </p>
+        </div>
+        <div class="entry-actions">
+          <a class="panel-link" href="layer-1.html">Read Layer 1 essay →</a>
+        </div>
+      </section>
+    `,
+  },
+};
+
+// ---- helpers ----
+
+function getContourTitleForTooltip(id) {
+  const item = CONTOUR_CONTENT[id];
+  return item?.title ?? `Contour: ${id}`;
+}
+
+function setActiveContour(id) {
+  document.querySelectorAll(".contour").forEach((c) => c.classList.remove("active-contour"));
+  const clicked = document.getElementById(id);
+  clicked?.classList.add("active-contour");
+}
+
+function openPanel() {
+  panel.classList.add("open");
+  panelOverlay.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+}
+
+function closePanel() {
+  panel.classList.remove("open");
+  panelOverlay.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+}
+
+function getFallbackEntry(id) {
+  return {
+    title: `Contour: ${id}`,
+    meta: `Unwritten fragment · add this entry in CONTOUR_CONTENT`,
+    layer: 0,
+    order: 9999,
+    body: `
+      <section class="entry">
+        <div class="entry-block">
+          <div class="entry-label">Unwritten fragment</div>
+          <p>
+            This ring doesn’t have an entry yet. Add it in <code>CONTOUR_CONTENT</code> inside <code>v2/script.js</code>.
+          </p>
+        </div>
+        <div class="entry-block">
+          <div class="entry-label">Template</div>
+          <pre><code>"${id}": {
+  title: "...",
+  meta: "Layer 1 · Instrument · ...",
+  layer: 1,
+  order: 3,
+  body: \`&lt;section class="entry"&gt;...&lt;/section&gt;\`
+}</code></pre>
+        </div>
+        <div class="entry-actions">
+          <a class="panel-link" href="essay.html">Open the layered essay →</a>
+        </div>
+      </section>
+    `,
+  };
+}
+
+function getEntry(id) {
+  return CONTOUR_CONTENT[id] ?? getFallbackEntry(id);
+}
+
+function getIdsInLayer(layerNum) {
+  const ids = Object.entries(CONTOUR_CONTENT)
+    .filter(([_, v]) => v.layer === layerNum)
+    .sort((a, b) => (a[1].order ?? 9999) - (b[1].order ?? 9999))
+    .map(([k]) => k);
+  return ids;
+}
+
+let currentId = null;
+
+function updateFooterNav(entry) {
+  if (!prevBtn || !nextBtn || !layerLink) return;
+
+  const layerNum = entry.layer ?? 0;
+  const ids = getIdsInLayer(layerNum);
+
+  // If there are no authored entries in this layer, disable navigation
+  if (ids.length === 0 || !currentId) {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    layerLink.href = "essay.html";
+    layerLink.textContent = "Read Layer";
+    return;
+  }
+
+  const idx = ids.indexOf(currentId);
+  prevBtn.disabled = idx <= 0;
+  nextBtn.disabled = idx < 0 || idx >= ids.length - 1;
+
+  const layerInfo = LAYERS[layerNum] ?? { name: "Layer", href: "essay.html" };
+  layerLink.href = layerInfo.href;
+  layerLink.textContent = `Read ${layerInfo.name}`;
+}
+
+function openPanelForContour(id) {
+  currentId = id;
+  const entry = getEntry(id);
+
+  panelTitle.textContent = entry.title ?? `Contour: ${id}`;
+  panelMeta.textContent = entry.meta ?? "";
+  panelBody.innerHTML = entry.body ?? "";
+
+  setActiveContour(id);
+  updateFooterNav(entry);
+  openPanel();
+}
+
+// ---- wire UI ----
+
+panelClose?.addEventListener("click", closePanel);
+panelOverlay?.addEventListener("click", closePanel);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePanel();
+});
+
+prevBtn?.addEventListener("click", () => {
+  if (!currentId) return;
+  const entry = getEntry(currentId);
+  const ids = getIdsInLayer(entry.layer ?? 0);
+  const idx = ids.indexOf(currentId);
+  if (idx > 0) openPanelForContour(ids[idx - 1]);
+});
+
+nextBtn?.addEventListener("click", () => {
+  if (!currentId) return;
+  const entry = getEntry(currentId);
+  const ids = getIdsInLayer(entry.layer ?? 0);
+  const idx = ids.indexOf(currentId);
+  if (idx >= 0 && idx < ids.length - 1) openPanelForContour(ids[idx + 1]);
+});
+
+// ---- hover + click behavior on contours ----
+
+contours.forEach((path) => {
+  path.addEventListener("mouseenter", () => {
+    tooltip.style.opacity = 1;
+    tooltip.innerHTML = getContourTitleForTooltip(path.id);
+  });
+
+  path.addEventListener("mousemove", (e) => {
+    tooltip.style.left = e.pageX + 12 + "px";
+    tooltip.style.top = e.pageY + 12 + "px";
+  });
+
+  path.addEventListener("mouseleave", () => {
+    tooltip.style.opacity = 0;
+  });
+
+  path.addEventListener("click", () => {
+    openPanelForContour(path.id);
+  });
+});
 
