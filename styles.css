@@ -1,5 +1,4 @@
 
-
 :root{
   /* Paper tones */
   --paper: #f6f1e7;
@@ -25,13 +24,9 @@
    Base
 ------------------------------------------------------- */
 
-*{
-  box-sizing: border-box;
-}
+*{ box-sizing: border-box; }
 
-html, body{
-  height: 100%;
-}
+html, body{ height: 100%; }
 
 body{
   margin: 0;
@@ -112,15 +107,74 @@ body{
   max-width: none;
   margin: 0 auto;
 
-  padding-top: 75px;
+  padding-top: 75px; /* room for topbar */
   padding-left: 18px;
   padding-right: 18px;
 }
 
-/* Make SVG large and comfortable */
+/* --- Faint cartographic gridlines overlay --- */
+#map-container::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+
+  /* minor + major grid */
+  background-image:
+    /* minor vertical */
+    repeating-linear-gradient(to right,
+      rgba(27,26,23,.040) 0,
+      rgba(27,26,23,.040) 1px,
+      transparent 1px,
+      transparent 64px
+    ),
+    /* minor horizontal */
+    repeating-linear-gradient(to bottom,
+      rgba(27,26,23,.040) 0,
+      rgba(27,26,23,.040) 1px,
+      transparent 1px,
+      transparent 64px
+    ),
+    /* major vertical */
+    repeating-linear-gradient(to right,
+      rgba(27,26,23,.075) 0,
+      rgba(27,26,23,.075) 1px,
+      transparent 1px,
+      transparent 256px
+    ),
+    /* major horizontal */
+    repeating-linear-gradient(to bottom,
+      rgba(27,26,23,.075) 0,
+      rgba(27,26,23,.075) 1px,
+      transparent 1px,
+      transparent 256px
+    );
+
+  /* vignette fade so it feels atmospheric */
+  mask-image: radial-gradient(circle at 50% 45%, black 55%, transparent 88%);
+  opacity: .55;
+  transition: opacity 220ms ease;
+}
+
+/* Fade gridlines when user interacts */
+#map-container:hover::before{
+  opacity: .18;
+}
+
+/* Fade gridlines when panel is open */
+body.panel-open #map-container::before{
+  opacity: .18;
+}
+
+/* Make SVG BIG and comfortable */
 #map-container svg{
+  position: relative;
+  z-index: 2;                 /* above grid */
+
   width: 100%;
-  height: calc(100vh - 95px);
+  height: calc(100vh - 95px); /* fills most of viewport */
+  min-height: 640px;          /* ensures it's not tiny on big screens */
   display: block;
 }
 
@@ -131,6 +185,7 @@ body{
   fill: none;
   cursor: pointer;
 
+  /* keeps stroke thickness consistent when SVG scales */
   vector-effect: non-scaling-stroke;
 
   transition:
@@ -394,17 +449,17 @@ body{
 ------------------------------------------------------- */
 
 @media (max-width: 760px){
+  #map-container{
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 
+  /* On phones, don’t force full viewport height */
   #map-container svg{
-    height: 70vh;
+    height: 72vh;
+    min-height: 420px;
   }
 
-  .site-title{
-    font-size: 16px;
-  }
-
-  .info-panel{
-    width: 95vw;
-  }
-
+  .site-title{ font-size: 16px; }
+  .info-panel{ width: 95vw; }
 }
